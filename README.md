@@ -4,7 +4,7 @@ La nostra app per la gestione delle password offre un archivio adatto per memori
 
 Struttura primitiva?
 
-- Pagina di login, inserimento dati e salvarli in un database, creare delle categorie per suddividere le password, BONUS: contatti, feedback cliente, autocompletamento;
+- Pagina di login, inserimento dati e salvare ID in un database, creare delle categorie per suddividere le password, BONUS: contatti, feedback cliente, autocompletamento;
 
 Target Clienti?
 
