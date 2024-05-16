@@ -1,8 +1,9 @@
 {
   "name": "codepass",
   "version": "1.0.0",
+  "type": "commonjs",
   "description": "La nostra app per la gestione delle password offre un archivio adatto per memorizzare tutti i tipi di password. Con un solo clic, puoi generare password complesse, conservare i tuoi dati e accedere rapidamente ai tuoi account. Semplicità e comodità garantite.",
-  "main": "",
+  "main": "src/project/codepass/scripts/scripts.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write .",
@@ -27,10 +28,14 @@
     "@commitlint/config-conventional": "^19.2.2",
     "@eslint/js": "^9.2.0",
     "eslint": "^9.2.0",
+    "eslint-plugin-node": "^11.1.0",
     "globals": "^15.2.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "validate-branch-name": "^1.3.0"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0"
   }
 }
