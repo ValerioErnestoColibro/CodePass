@@ -16,39 +16,39 @@ class PasswordItems {
     this.#description = description;
     this.#id = uuidv4();
   }
-  getEmail() {
+  $getEmail() {
     return this.#email;
   }
 
-  setEmail(email) {
+  $setEmail(email) {
     this.#email = email;
   }
 
-  getPassword() {
+  $getPassword() {
     return this.#password;
   }
 
-  setPassword(password) {
+  $setPassword(password) {
     this.#password = password;
   }
 
-  getWebsite() {
+  $getWebsite() {
     return this.#website;
   }
 
-  setWebsite(website) {
+  $setWebsite(website) {
     this.#website = website;
   }
 
-  getDescription() {
+  $getDescription() {
     return this.#description;
   }
 
-  setDescription(description) {
+  $setDescription(description) {
     this.#description = description;
   }
 
-  getId() {
+  $getId() {
     return this.#id;
   }
 }
