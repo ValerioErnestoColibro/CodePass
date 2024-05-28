@@ -3,15 +3,8 @@
 'use strict';
 
 const User = require('../models/User.test');
-var CryptoJS = require('crypto-js');
 const validator = require('validator');
-
-function validateUserName(username) {
-  return /^[a-z0-9_]{3,16}$/.test(username);
-}
-function validatePassword(password) {
-  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/.test(password);
-}
+const bcrypt = require('bcrypt');
 
 class UsersManager {
   #users;
@@ -21,205 +14,342 @@ class UsersManager {
     this.#session = null;
   }
 
-  #hashWithKey(text, key) {
-    return CryptoJS.HmacSHA256(text, key).toString(CryptoJS.enc.Hex);
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                   //
+  //                        VALIDATE & MATCH - FUNZIONI DI VALIDAZIONE E CORRISPONDENZA                //
+  //                                                                                                   //
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //? implementare ID
+
+  #validateUserName(username) {
+    return /^[a-z0-9_]{3,16}$/.test(username);
+  }
+
+  #validatePassword(password) {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/.test(password);
+  }
+
+  #validateEmail(email) {
+    return validator.isEmail(email);
+  }
+
+  #matchPassword(password, get) {
+    return bcrypt.compareSync(password, get);
+  }
+
+  #findUserByUsername(username) {
+    return this.#users.find((u) => username === u.getUsername());
+  }
+  #finUserbyEmail(email) {
+    return this.#users.find((u) => email === u.getEmail());
+  }
+  #findUserByPassword(password) {
+    return this.#users.find((p) => this.#matchPassword(password, p.getPassword()));
+  }
+  #findUserByMaster(master) {
+    return this.#users.find((p) => this.#matchPassword(master, p.getMaster()));
+  }
+  #findUserByUsernameAndPassword(username, password, master) {
+    return this.#users.find(
+      (u) =>
+        u.getUsername() === username &&
+        this.#findUserByPassword(password, u.getPassword()) &&
+        this.#findUserByMaster(master, u.getMaster()) &&
+        u.getID() &&
+        u.getPasswordItems()
+    );
   }
 
   signup(username, email, password, master) {
-    if (!this.#session) {
-      if (this.#users.find(u => u.getUsername() === username)) {
-        console.log('Username già in uso! ⚠️');
-        return null;
-      }
-      if (!validateUserName(username)) {
-        console.log('Username non valido! ⚠️');
-        return null;
-      }
-      if (!validator.isEmail(email)) {
-        console.log('Email non valida! ⚠️');
-        return null;
-      }
-      if (!validatePassword(password)) {
-        console.log('Password non valida! ⚠️');
-        return null;
-      }
-      if (!validatePassword(master)) {
-        console.log('Master Password non valida! ⚠️');
-        return null;
-      }
-      const hashedPassword = this.#hashWithKey(password, master);
-      const user = new User(username, email, hashedPassword, master);
-      this.#users = [...this.#users, user];
-      console.log(`Utente ${user.getUsername()} registrato! ✅`);
-      return user;
-    } else {
-      console.log(`Sei giá loggato ! ⚠️`);
+    if (this.#session) {
+      console.log(`Sei giá loggato ${this.#session.username}! ⚠️`);
+      return null;
     }
+    if (this.#findUserByUsername(username)) {
+      console.log('Username già in uso! ⚠️');
+      return null;
+    }
+    if (this.#finUserbyEmail(email)) {
+      console.log('Email già in uso! ⚠️');
+      return null;
+    }
+    if (!this.#validateUserName(username)) {
+      console.log('Username non valido! ⚠️');
+      return null;
+    }
+
+    if (!this.#validateEmail(email)) {
+      console.log('Email non valida! ⚠️');
+      return null;
+    }
+
+    if (!this.#validatePassword(password)) {
+      console.log('Password non valida! ⚠️');
+      return null;
+    }
+
+    if (!this.#validatePassword(master)) {
+      console.log('Master Password non valida! ⚠️');
+      return null;
+    }
+
+    if (!username || !email || !password || !master) {
+      console.log('Parametri mancanti! ⚠️');
+    }
+
+    const user = new User(username, email, password, master);
+    this.#users = [...this.#users, user];
+    console.log(`Utente ${user.getUsername()} registrato! ✅`);
+    return user;
   }
 
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                   //
+  //                SIGNUP, LOGIN, LOGOUT & DELETE - GESTIONE DELL'UTENTE                              //
+  //                                                                                                   //
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //? Da implementare ID e check immutabilitá
+
   login(username, password, master) {
-    if (!this.#session) {
-      const hashedPassword = this.#hashWithKey(password, master);
-      const user = this.#users.find(
-        u => u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master,
-      );
-      if (!!user) {
-        this.#session = { id: user.getID(), username: user.getUsername() };
-        console.log(`Utente ${user.getUsername()} loggato! ✅`);
-        return user;
-      } else {
-        console.log(`Utente non trovato! ⚠️`);
-        return null;
-      }
-    } else {
-      console.log(`Sei giá loggato ! ⚠️`);
+    if (this.#session) {
+      console.log(`Sei giá loggato ${this.#session.username}! ⚠️`);
       this.getSession();
+      return;
     }
+
+    const user = this.#findUserByUsernameAndPassword(username, password, master);
+
+    if (user) {
+      this.#session = {
+        id: user.getID(),
+        username: user.getUsername(),
+      };
+      console.log(`Utente ${user.getUsername()} loggato! ✅`);
+      return user;
+    }
+
+    if (!this.#findUserByUsername(username)) {
+      console.log('Username non trovato! ⚠️');
+    } else if (!this.#findUserByPassword(password)) {
+      console.log('Password errata! ⚠️');
+    } else if (!this.#findUserByMaster(master)) {
+      console.log('Master password errata! ⚠️');
+    }
+
+    return null;
   }
+
   logout() {
-    if (!!this.#session) {
+    if (this.#session) {
       const username = this.#session.username;
       this.#session = null;
       console.log(`Utente ${username} disconnesso! ✅`);
-      return true;
     } else {
       console.log(`Prima devi effettuare l'accesso ! ⚠️`);
-      return false;
     }
   }
 
-  //* todo da rivedere
   deleteUser(username, password, master) {
-    if (!!this.#session) {
-      const hashedPassword = this.#hashWithKey(password, master);
-      const index = this.#users.findIndex(
-        u => u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master,
-      );
-      if (index !== -1) {
-        this.#users = this.#users.filter(
-          u => !(u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master),
-        );
-        this.#session = null;
-        console.log(`Utente ${username} eliminato! ✅`);
-      } else {
-        console.log(`Utente ${username} non trovato! ⚠️`);
-      }
-    } else {
+    if (!this.#session) {
       console.log(`Prima devi effettuare l'accesso ! ⚠️`);
     }
+
+    const user = this.#findUserByUsernameAndPassword(username, password, master);
+
+    if (!user) {
+      console.log('Credenziali errate o utente non trovato! ⚠️');
+    }
+
+    if (this.#session.username !== username) {
+      console.log(`Non puoi eliminare un account diverso dal tuo! ⚠️`);
+      return;
+    }
+
+    this.#users = this.#users.filter((u) => u.getUsername() !== username);
+    this.#session = null;
+    console.log(`Utente ${username} eliminato! ✅`);
   }
-  //* da rivedere metodo
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                   //
+  //                UPDATE: USERNAME, EMAIL, PASSWORD & MASTER - MODIFICA DATI UTENTE                  //
+  //                                                                                                   //
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //? Da implementare controllo duplicati e ID
+
   updateUsername(username, password, master, newUsername) {
-    if (!!this.#session) {
-      const hashedPassword = this.#hashWithKey(password, master);
-      const user = this.#users.find(
-        u => u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master,
-      );
-      if (!!user) {
-        if (validateUserName(newUsername)) {
-          user.setUsername(newUsername);
-          this.#session = { id: user.getID(), username: user.getUsername() };
-          console.log(`Username dell'utente ${user.getUsername()} aggiornato! ✅`);
-        } else {
-          console.log(`Username ${newUsername} non valido! ⚠️`);
-        }
-      } else {
-        console.log(`Utente ${username} non trovato! ⚠️`);
+    if (!this.#session) {
+      console.log("Errore: Nessuna sessione attiva. Prima devi effettuare l'accesso! ⚠️");
+      return;
+    }
+
+    if (!this.#validateUserName(newUsername)) {
+      console.log(`Errore: Username ${newUsername} non valido! ⚠️`);
+      return;
+    }
+
+    const user = this.#findUserByUsernameAndPassword(username, password, master);
+    if (!user) {
+      console.log('Credenziali errate o utente non trovato! ⚠️');
+      return;
+    }
+
+    const updatedUsername = this.#users.map((u) => {
+      if (u.getUsername() === username) {
+        return new User(newUsername, u.getEmail(), password, master);
       }
+      return u;
+    });
+
+    const checkUsername = updatedUsername.find((u) => u.getUsername() === newUsername);
+    if (checkUsername) {
+      console.log(`Aggiornamento: Username aggiornato da ${username} a ${newUsername}. ✅`);
+      this.#session.username = newUsername;
+      this.#users = updatedUsername;
+      return checkUsername;
     } else {
-      console.log(`Prima devi effettuare l'accesso ! ⚠️`);
+      console.log(`Username non aggiornato! ⚠️`);
     }
   }
 
-  //* da rivedere metodo
   updateEmail(username, password, master, newEmail) {
-    if (!!this.#session) {
-      const hashedPassword = this.#hashWithKey(password, master);
-      const user = this.#users.find(
-        u => u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master,
-      );
-      if (!!user) {
+    if (!this.#session) {
+      console.log("Nessuna sessione attiva. Prima devi effettuare l'accesso! ⚠️");
+      return;
+    }
+
+    const user = this.#findUserByUsername(username, password, master);
+    if (!user) {
+      console.log('Credenziali errate o utente non trovato! ⚠️');
+      return;
+    }
+
+    const updatedEmail = this.#users.map((u) => {
+      if (u.getUsername() === username) {
         if (validator.isEmail(newEmail)) {
-          user.setEmail(newEmail);
-          console.log(`Email dell'utente ${user.getUsername()} aggiornata! ✅`);
+          return new User(u.getUsername(), newEmail, password, master);
         } else {
           console.log(`Email ${newEmail} non valida! ⚠️`);
+          return u;
         }
-      } else {
-        console.log(`Utente ${username} non trovato! ⚠️`);
       }
+      return u;
+    });
+
+    const checkEmail = updatedEmail.find((e) => e.getEmail() === newEmail);
+    if (checkEmail) {
+      console.log(`Aggiornamento: Email aggiornata a ${user.getEmail()}. ✅`);
+      this.#users = updatedEmail;
+      return checkEmail;
     } else {
-      console.log(`Prima devi effettuare l'accesso ! ⚠️`);
+      console.log('Email non aggiornata! ⚠️');
     }
   }
 
-  //* da rivedere metodo
   updatePassword(username, password, master, newPassword) {
-    if (!!this.#session) {
-      const hashedPassword = this.#hashWithKey(password, master);
-      const user = this.#users.find(
-        u => u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master,
-      );
-      if (!!user) {
-        if (validatePassword(newPassword)) {
-          const newHashedPassword = this.#hashWithKey(newPassword, master);
-          user.setPassword(newHashedPassword);
-          console.log(`Password dell'utente ${user.getUsername()} aggiornata! ✅`);
+    if (!this.#session) {
+      console.log("Nessuna sessione attiva. Prima devi effettuare l'accesso! ⚠️");
+      return;
+    }
+
+    const user = this.#findUserByUsernameAndPassword(username, password, master);
+
+    if (!user) {
+      console.log('Credenziali errate o utente non trovato! ⚠️');
+      return;
+    }
+
+    const updatedPassword = this.#users.map((u) => {
+      if (u.getUsername() === username) {
+        if (this.#validatePassword(newPassword)) {
+          return new User(u.getUsername(), u.getEmail(), newPassword, master);
         } else {
           console.log(`Password ${newPassword} non valida! ⚠️`);
+          return u;
         }
-      } else {
-        console.log(`Utente ${username} non trovato! ⚠️`);
       }
+      return u;
+    });
+
+    const checkPassword = updatedPassword.find((p) => this.#matchPassword(newPassword, p.getPassword()));
+    if (checkPassword) {
+      console.log(`Password dell'utente ${user.getUsername()} aggiornata! ✅`);
+      this.#users = updatedPassword;
+      return checkPassword;
     } else {
-      console.log(`Prima devi effettuare l'accesso ! ⚠️`);
+      console.log('Password non aggiornata ! ⚠️');
     }
   }
 
-  //* da rivedere metodo
-  updateMasterPassword(username, password, master, newMaster) {
-    if (!!this.#session) {
-      const hashedPassword = this.#hashWithKey(password, master);
-      const user = this.#users.find(
-        u => u.getUsername() === username && u.getPassword() === hashedPassword && u.getMaster() === master,
-      );
-      if (!!user) {
-        if (validatePassword(newMaster)) {
-          user.setMaster(newMaster);
-          console.log(`Master Password dell'utente ${user.getUsername()} aggiornata! ✅`);
+  updateMaster(username, password, master, newMaster) {
+    if (!this.#session) {
+      console.log("Nessuna sessione attiva. Prima devi effettuare l'accesso! ⚠️");
+      return;
+    }
+
+    const user = this.#findUserByUsernameAndPassword(username, password, master);
+    if (!user) {
+      console.log('Credenziali errate o utente non trovato! ⚠️');
+      return;
+    }
+
+    const updatedMaster = this.#users.map((m) => {
+      if (m.getUsername() === username) {
+        if (this.#validatePassword(newMaster)) {
+          return new User(m.getUsername(), m.getEmail(), password, newMaster);
         } else {
           console.log(`Master Password ${newMaster} non valida! ⚠️`);
+          return m;
         }
-      } else {
-        console.log(`Utente ${username} non trovato! ⚠️`);
       }
+      return m;
+    });
+
+    const checkMaster = updatedMaster.find((m) => this.#matchPassword(newMaster, m.getMaster()));
+    if (checkMaster) {
+      console.log(`Master Password dell'utente ${user.getUsername()} aggiornata! ✅`);
+      this.#users = updatedMaster;
+      return checkMaster;
     } else {
-      console.log(`Prima devi effettuare l'accesso ! ⚠️`);
+      console.log('Master Password non aggiornata! ⚠️');
     }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                   //
+  //                                    INFO - GESTIONE INFORMAZIONI                                   //
+  //                                                                                                  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //? funzioni test
+
+  getarray() {
+    return this.#users.forEach((u) => console.log(u));
   }
 
   getSession() {
-    return this.#session;
+    return console.log(this.#session);
   }
 
-  //!
   showUser(username) {
-    const user = this.#users.find(u => u.getUsername() === username);
+    const user = this.#users.find((u) => u.getUsername() === username);
     if (user) {
       console.log(
-        `👤 Username: ${user.getUsername()}, ✉️ Email: ${user.getEmail()}, 🔒 Password: ${user.getPassword()}, 🔐 MasterPassword: ${user.getMaster()}, 🆔 ID : ${user.getID()},📦 Items : ${user.getPasswordItems()}`,
+        `👤 Username: ${user.getUsername()}, ✉️ Email: ${user.getEmail()}, 🔒 Password: ${user.getPassword()}, 🔐 MasterPassword: ${user.getMaster()}, 🆔 ID : ${user.getID()},📦 Items : ${user.getPasswordItems()}`
       );
     } else {
       console.log('Utente non trovato! ⚠️');
     }
   }
 
-  //!
   listUser() {
-    this.#users.forEach(user =>
+    this.#users.forEach((user) =>
       console.log(
-        `👤 Username: ${user.getUsername()}, ✉️ Email: ${user.getEmail()}, 🔒 Password: ${user.getPassword()}, 🔐 MasterPassword: ${user.getMaster()}, 🆔 ID : ${user.getID()},📦 Items : ${user.getPasswordItems()}`,
-      ),
+        `👤 Username: ${user.getUsername()}, ✉️ Email: ${user.getEmail()}, 🔒 Password: ${user.getPassword()}, 🔐 MasterPassword: ${user.getMaster()}, 🆔 ID : ${user.getID()},📦 Items : ${user.getPasswordItems()}`
+      )
     );
   }
 }

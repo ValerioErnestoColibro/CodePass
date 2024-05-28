@@ -2,10 +2,8 @@
 
 'use strict';
 
-const PasswordItems = require('./PasswordItems.test');
-const UsersManager = require('../services/UsersManager.test');
 const { v4: uuidv4 } = require('uuid');
-const validator = require('validator');
+const bcrypt = require('bcrypt');
 class User {
   #username;
   #email;
@@ -17,57 +15,68 @@ class User {
   constructor(username, email, password, master) {
     this.#username = username;
     this.#email = email;
-    this.#password = password;
-    this.#master = master;
+    this.#password = bcrypt.hashSync(password, 10);
+    this.#master = bcrypt.hashSync(master, 10);
     this.#passwordItems = [];
     this.#id = uuidv4();
   }
 
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                   //
+  //                            GET & SET - OPERAZIONI DI RECUPERO E IMPOSTAZIONE                     //
+  //                                                                                                   //
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
   getUsername() {
     return this.#username;
   }
+
   setUsername(username) {
     this.#username = username;
   }
+
   getEmail() {
     return this.#email;
   }
+
   setEmail(email) {
     this.#email = email;
   }
+
   getPassword() {
     return this.#password;
   }
+
   setPassword(password) {
     this.#password = password;
   }
+
   getMaster() {
     return this.#master;
   }
+
   setMaster(master) {
     this.#master = master;
   }
+
   getID() {
     return this.#id;
   }
+
   getPasswordItems() {
     return this.#passwordItems;
   }
-  //!
-  printPasswordItems() {
-    this.#passwordItems.forEach(passwordItem => {
-      console.log(passwordItem);
-    });
+  setPasswordItems(passwordItems) {
+    this.#passwordItems = passwordItems;
   }
-  addPasswordItem(passwordItem) {
-    this.#passwordItems = [...this.#passwordItems, passwordItem];
-  }
-  //* da rivedere
-  removePasswordItem(passwordItem) {
-    const index = this.#passwordItems.indexOf(passwordItem);
-    if (index !== -1) {
-      this.#passwordItems.splice(index, 1);
-    }
+
+  //? funzioni test
+  print() {
+    return this.#passwordItems.forEach((p) =>
+      console.log(
+        `✉️ Email: ${p.$getEmail()}, 🔒 Password: ${p.$getPassword()}, 🌐 WebSite: ${p.$getWebsite()}, 📜 Description : ${p.$getDescription()}`
+      )
+    );
   }
 }
 
