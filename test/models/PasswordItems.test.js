@@ -36,7 +36,7 @@ class PasswordItems {
     return this.#website;
   }
 
-  $setWebsite(website) {
+  $setWebSite(website) {
     this.#website = website;
   }
 

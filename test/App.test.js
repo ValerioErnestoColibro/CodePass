@@ -39,7 +39,19 @@ app.users.updateUsername('mariorossi', 'Password1234@!', 'Master1234@!', 'newmar
 app.users.getSession(); // check update session
 app.users.updateEmail('newmariorossi', 'Password1234@!', 'Master1234@!', 'newmariorossi@gmail.com');
 app.users.updatePassword('newmariorossi', 'Password1234@!', 'Master1234@!', 'Newpa123@!');
-app.users.updateMaster('newmariorossi', 'Newpa123@!', 'Master1234@!', 'Newmaster123@!');
+const updatedUser = app.users.updateMaster('newmariorossi', 'Newpa123@!', 'Master1234@!', 'Newmaster123@!');
+// app.users.listUser();
+console.log('');
+app.password.addPasswordItem(updatedUser, 'example@email.com', 'password1234@!', 'google.com', 'google desc');
+app.password.addPasswordItem(updatedUser, '1', '2', '3', '4');
+app.password.updateEmailItem(updatedUser, 'example@email.com', 'newemail@gmail.com');
+app.password.updatePasswordItem(updatedUser, 'newemail@gmail.com', 'newPassword');
+app.password.updateEmailItem(updatedUser, '1', 'newEMAIL');
+app.password.updateWebSiteItem(updatedUser, 'newemail@gmail.com', 'newWEBSITE');
+app.password.updateDescriptionItem(updatedUser, 'newemail@gmail.com', 'newDESC');
+console.log('');
+// app.users.listUser();
+updatedUser.print();
 app.users.listUser();
 
 /*
@@ -49,6 +61,12 @@ app.users.listUser();
 //                                                                                               //
 //////////////////////////////////////////////////////////////////////////////////////////////////
 */
+
+// app.users.listUser();
+// // app.password.deletePasswordItem(updatedUser, 'example@email.com');
+// // app.users.listUser();
+// app.password.updateEmailItem(updatedUser, 'example@email.com', 'newemail@gmail.com');
+// app.users.showUser('newmariorossi');
 
 /*
 ////////////////////////////////////////////////////////////////////////////////////////////////////
