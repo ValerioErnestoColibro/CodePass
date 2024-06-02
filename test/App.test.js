@@ -42,17 +42,24 @@ app.users.updatePassword('newmariorossi', 'Password1234@!', 'Master1234@!', 'New
 const updatedUser = app.users.updateMaster('newmariorossi', 'Newpa123@!', 'Master1234@!', 'Newmaster123@!');
 // app.users.listUser();
 console.log('');
-app.password.addPasswordItem(updatedUser, 'example@email.com', 'password1234@!', 'google.com', 'google desc');
-app.password.addPasswordItem(updatedUser, '1', '2', '3', '4');
-app.password.updateEmailItem(updatedUser, 'example@email.com', 'newemail@gmail.com');
-app.password.updatePasswordItem(updatedUser, 'newemail@gmail.com', 'newPassword');
-app.password.updateEmailItem(updatedUser, '1', 'newEMAIL');
-app.password.updateWebSiteItem(updatedUser, 'newemail@gmail.com', 'newWEBSITE');
-app.password.updateDescriptionItem(updatedUser, 'newemail@gmail.com', 'newDESC');
-console.log('');
-// app.users.listUser();
+const itemPrimo = app.password.addPasswordItem(
+  updatedUser,
+  'example@email.com',
+  'password1234@!',
+  'google.com',
+  'google desc'
+);
+const itemSecondo = app.password.addPasswordItem(updatedUser, '1', '2', '3', '4');
+app.password.updateEmailItem(updatedUser, itemPrimo, 'newemail@gmail.com');
+app.password.updatePasswordItem(updatedUser, itemPrimo, 'newPassword');
+app.password.updateEmailItem(updatedUser, itemSecondo, 'newEMAIL');
+app.password.updateWebSiteItem(updatedUser, itemPrimo, 'newWEBSITE');
+app.password.updateDescriptionItem(updatedUser, itemPrimo, 'newDESC');
+// console.log('');
+// // app.users.listUser();
+// app.password.deletePasswordItem(updatedUser, itemPrimo);
 updatedUser.print();
-app.users.listUser();
+// app.users.listUser();
 
 /*
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -12,8 +12,6 @@ class PasswordManager {
   //                                                                                                   //
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //?? Da implementare metodi immutabili e ID
-
   addPasswordItem(user, email, password, website, description) {
     this.#validateUser(user);
     this.#validateParam(email, password, website, description);
@@ -24,15 +22,15 @@ class PasswordManager {
 
     return this.#logAndReturn(
       `Password aggiunta alla cassaforte : ✉️ Email : ${newItem.$getEmail()}, 🔒 Password : ${newItem.$getPassword()}, 🌐 Sito Web : ${newItem.$getWebsite()}, 📜 Descrizione : ${newItem.$getDescription()}`,
-      passwordItems
+      newItem.$getId()
     );
   }
 
-  deletePasswordItem(user, email) {
+  deletePasswordItem(user, id) {
     this.#validateUser(user);
 
     const paswordItems = user.getPasswordItems();
-    const itemDelete = paswordItems.filter((d) => d.$getEmail() !== email);
+    const itemDelete = paswordItems.filter((d) => d.$getId() !== id);
     user.setPasswordItems(itemDelete);
 
     return this.#logAndReturn(`Item rimosso! ✅`, itemDelete);
@@ -44,22 +42,20 @@ class PasswordManager {
   //                                                                                                  //
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //?? PasswordItems immutabile ma User mutabile // Da sistemare ... // Da implementare ID
-
-  updateEmailItem(user, email, newEmail) {
-    this.#updatePasswordItem(user, email, newEmail, 'email');
+  updateEmailItem(user, id, newEmail) {
+    this.#updatePasswordItem(user, id, newEmail, 'email');
   }
 
-  updatePasswordItem(user, email, newPassword) {
-    this.#updatePasswordItem(user, email, newPassword, 'password');
+  updatePasswordItem(user, id, newPassword) {
+    this.#updatePasswordItem(user, id, newPassword, 'password');
   }
 
-  updateWebSiteItem(user, email, newWebsite) {
-    this.#updatePasswordItem(user, email, newWebsite, 'website');
+  updateWebSiteItem(user, id, newWebsite) {
+    this.#updatePasswordItem(user, id, newWebsite, 'website');
   }
 
-  updateDescriptionItem(user, email, newDescription) {
-    this.#updatePasswordItem(user, email, newDescription, 'description');
+  updateDescriptionItem(user, id, newDescription) {
+    this.#updatePasswordItem(user, id, newDescription, 'description');
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +81,10 @@ class PasswordManager {
     }
   }
 
-  #updatePasswordItem(user, email, newValue, type) {
+  #updatePasswordItem(user, id, newValue, type) {
     this.#validateUser(user);
 
-    const index = user.getPasswordItems().findIndex((u) => u.$getEmail() === email);
+    const index = user.getPasswordItems().findIndex((u) => u.$getId() === id);
     if (index === -1) {
       this.#logAndReturn(`Nessun item trovato! ⚠️`, false);
     }

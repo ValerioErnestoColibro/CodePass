@@ -90,8 +90,6 @@ class UsersManager {
   //                                                                                                   //
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //? ID
-
   updateUsername(username, password, master, newUsername) {
     if (!this.#session) {
       return this.#logAndReturn("Errore: Nessuna sessione attiva. Prima devi effettuare l'accesso! ⚠️", false);
@@ -226,7 +224,7 @@ class UsersManager {
   //                                                                                                  //
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //? test
+  //? Test
 
   getarray() {
     return this.#users.forEach((u) => console.log(u));
@@ -260,8 +258,6 @@ class UsersManager {
   //                        VALIDATE & MATCH - FUNZIONI DI VALIDAZIONE E CORRISPONDENZA                //
   //                                                                                                   //
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  //? ID
 
   #validateUserName(username) {
     return /^[a-z0-9_]{3,16}$/.test(username);
