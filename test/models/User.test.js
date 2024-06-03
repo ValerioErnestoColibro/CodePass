@@ -48,7 +48,7 @@ class User {
   }
 
   setPassword(password) {
-    this.#password = password;
+    this.#password = bcrypt.hashSync(password, 10);
   }
 
   getMaster() {
@@ -56,7 +56,7 @@ class User {
   }
 
   setMaster(master) {
-    this.#master = master;
+    this.#master = bcrypt.hashSync(master, 10);
   }
 
   getID() {
@@ -70,7 +70,7 @@ class User {
     this.#passwordItems = passwordItems;
   }
 
-  //? funzioni test
+  //? test
   print() {
     return this.#passwordItems.forEach((p) =>
       console.log(

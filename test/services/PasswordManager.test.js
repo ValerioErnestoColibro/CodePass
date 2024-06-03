@@ -12,37 +12,28 @@ class PasswordManager {
   //                                                                                                   //
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //?? Da implementare metodi immutabili e ID
-
   addPasswordItem(user, email, password, website, description) {
-    if (!user) {
-      console.log('Utente non trovato! ⚠️');
-    }
-    if (!email || !password || !website || !description) {
-      console.log('Parametri mancanti per aggiungere la password. ⚠️');
-    }
+    this.#validateUser(user);
+    this.#validateParam(email, password, website, description);
 
     const newItem = new PasswordItems(email, password, website, description);
     const passwordItems = [...user.getPasswordItems(), newItem];
     user.setPasswordItems(passwordItems);
 
-    console.log(
-      `Password aggiunta alla cassaforte : ✉️ Email : ${newItem.$getEmail()}, 🔒 Password : ${newItem.$getPassword()}, 🌐 Sito Web : ${newItem.$getWebsite()}, 📜 Descrizione : ${newItem.$getDescription()}`
+    return this.#logAndReturn(
+      `Password aggiunta alla cassaforte : ✉️ Email : ${newItem.$getEmail()}, 🔒 Password : ${newItem.$getPassword()}, 🌐 Sito Web : ${newItem.$getWebsite()}, 📜 Descrizione : ${newItem.$getDescription()}`,
+      newItem.$getId()
     );
-
-    return passwordItems;
   }
 
-  deletePasswordItem(user, email) {
-    if (!user) {
-      console.log('Utente non trovato! ⚠️');
-    }
+  deletePasswordItem(user, id) {
+    this.#validateUser(user);
 
     const paswordItems = user.getPasswordItems();
-    const itemDelete = paswordItems.filter((d) => d.$getEmail() !== email);
+    const itemDelete = paswordItems.filter((d) => d.$getId() !== id);
     user.setPasswordItems(itemDelete);
-    console.log(`Item rimosso! ✅`);
-    return itemDelete;
+
+    return this.#logAndReturn(`Item rimosso! ✅`, itemDelete);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,133 +42,74 @@ class PasswordManager {
   //                                                                                                  //
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //?? PasswordItems immutabile ma User mutabile // Da sistemare ... // Da implementare ID
+  updateEmailItem(user, id, newEmail) {
+    this.#updatePasswordItem(user, id, newEmail, 'email');
+  }
 
-  updateEmailItem(user, email, newEmail) {
+  updatePasswordItem(user, id, newPassword) {
+    this.#updatePasswordItem(user, id, newPassword, 'password');
+  }
+
+  updateWebSiteItem(user, id, newWebsite) {
+    this.#updatePasswordItem(user, id, newWebsite, 'website');
+  }
+
+  updateDescriptionItem(user, id, newDescription) {
+    this.#updatePasswordItem(user, id, newDescription, 'description');
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //                                                                                                    //
+  //                               PRIVATE METHODS - METODI PRIVATI                                     //
+  //                                                                                                    //
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  #logAndReturn(message, returnValue) {
+    console.log(message);
+    return returnValue;
+  }
+
+  #validateUser(user) {
     if (!user) {
-      console.log('Utente non trovato! ⚠️');
-    }
-
-    const item = user.getPasswordItems().find((p) => p.$getEmail() === email);
-    if (!item) {
-      console.log(`Nessun item trovato! ⚠️`);
-    }
-
-    if (item.$getEmail() === newEmail) {
-      console.log(`Email uguale! ⚠️`);
-    }
-    const passwordItems = user.getPasswordItems();
-    const updatedEmailItem = passwordItems.map((e) => {
-      if (e.$getEmail() === email) {
-        return new PasswordItems(newEmail, e.$getPassword(), e.$getWebsite(), e.$getDescription());
-      }
-      return e;
-    });
-
-    const checkEmail = updatedEmailItem.find((f) => f.$getEmail() === newEmail);
-    if (checkEmail) {
-      console.log(`Aggiornamento: Email ${email} aggiornata a ${newEmail}. ✅`);
-      user.setPasswordItems(updatedEmailItem);
-      return checkEmail;
-    } else {
-      console.log(`Email non aggiornata! ⚠️`);
+      this.#logAndReturn('Utente non trovato! ⚠️', false);
     }
   }
 
-  updatePasswordItem(user, email, newPassword) {
-    if (!user) {
-      console.log('Utente non trovato! ⚠️');
-    }
-
-    const item = user.getPasswordItems().find((p) => p.$getEmail() === email);
-    if (!item) {
-      console.log(`Nessun item trovato! ⚠️`);
-    }
-
-    if (item.$getPassword() === newPassword) {
-      console.log(`Password uguale! ⚠️`);
-    }
-
-    const passwordItems = user.getPasswordItems();
-    const updatedPasswordItem = passwordItems.map((p) => {
-      if (p.$getEmail() === email) {
-        return new PasswordItems(p.$getEmail(), newPassword, p.$getWebsite(), p.$getDescription());
-      }
-      return p;
-    });
-
-    const checkPassword = updatedPasswordItem.find((f) => f.$getPassword() === newPassword);
-    if (checkPassword) {
-      console.log(`Aggiornamento: Password aggiornata. ✅`);
-      user.setPasswordItems(updatedPasswordItem);
-      return checkPassword;
-    } else {
-      console.log(`Password non aggiornata! ⚠️`);
+  #validateParam(email, password, website, description) {
+    if (!email || !password || !website || !description) {
+      this.#logAndReturn('Parametri mancanti per aggiungere la password. ⚠️', false);
     }
   }
 
-  updateWebSiteItem(user, email, newWebsite) {
-    if (!user) {
-      console.log('Utente non trovato! ⚠️');
+  #updatePasswordItem(user, id, newValue, type) {
+    this.#validateUser(user);
+
+    const index = user.getPasswordItems().findIndex((u) => u.$getId() === id);
+    if (index === -1) {
+      this.#logAndReturn(`Nessun item trovato! ⚠️`, false);
     }
 
-    const item = user.getPasswordItems().find((p) => p.$getEmail() === email);
-    if (!item) {
-      console.log(`Nessun item trovato! ⚠️`);
+    let spread = [...user.getPasswordItems()];
+    let updatedItem = spread[index];
+
+    switch (type) {
+      case 'email':
+        updatedItem.$setEmail(newValue);
+        break;
+      case 'password':
+        updatedItem.$setPassword(newValue);
+        break;
+      case 'website':
+        updatedItem.$setWebSite(newValue);
+        break;
+      case 'description':
+        updatedItem.$setDescription(newValue);
+        break;
+      default:
+        this.#logAndReturn(`Aggiornamento non valido! ⚠️`, false);
     }
 
-    if (item.$getWebsite() === newWebsite) {
-      console.log(`WebSite uguale! ⚠️`);
-    }
-
-    const passwordItems = user.getPasswordItems();
-    const updatedWebSiteItem = passwordItems.map((w) => {
-      if (w.$getEmail() === email) {
-        return new PasswordItems(w.$getEmail(), w.$getPassword(), newWebsite, w.$getDescription());
-      }
-      return w;
-    });
-
-    const checkWebSite = updatedWebSiteItem.find((f) => f.$getWebsite() === newWebsite);
-    if (checkWebSite) {
-      console.log(`Aggiornamento: Website ${newWebsite} aggiornato. ✅`);
-      user.setPasswordItems(updatedWebSiteItem);
-      return checkWebSite;
-    } else {
-      console.log(`WebSite non aggiornato! ⚠️`);
-    }
-  }
-
-  updateDescriptionItem(user, email, newDescription) {
-    if (!user) {
-      console.log('Utente non trovato! ⚠️');
-    }
-
-    const item = user.getPasswordItems().find((p) => p.$getEmail() === email);
-    if (!item) {
-      console.log(`Nessun item trovato! ⚠️`);
-    }
-
-    if (item.$getDescription() === newDescription) {
-      console.log(`Descrizione uguale! ⚠️`);
-    }
-
-    const passwordItems = user.getPasswordItems();
-    const updatedDescriptionItem = passwordItems.map((d) => {
-      if (d.$getEmail() === email) {
-        return new PasswordItems(d.$getEmail(), d.$getPassword(), d.$getWebsite(), newDescription);
-      }
-      return d;
-    });
-
-    const checkDescription = updatedDescriptionItem.find((f) => f.$getDescription() === newDescription);
-    if (checkDescription) {
-      console.log(`Aggiornamento: Descrizione ${newDescription} aggiornata. ✅`);
-      user.setPasswordItems(updatedDescriptionItem);
-      return checkDescription;
-    } else {
-      console.log(`Descrizione non aggiornata! ⚠️`);
-    }
+    this.#logAndReturn(`Aggiornamento : ${type} aggiornata! ✅`, updatedItem);
   }
 }
 
